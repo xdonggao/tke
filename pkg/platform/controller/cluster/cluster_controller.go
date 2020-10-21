@@ -137,7 +137,7 @@ func (c *Controller) needsUpdate(old *platformv1.Cluster, new *platformv1.Cluste
 		return true
 	}
 
-	if !reflect.DeepEqual(old.ObjectMeta.Annotations, new.ObjectMeta.Labels) {
+	if !reflect.DeepEqual(old.ObjectMeta.Labels, new.ObjectMeta.Labels) {
 		return true
 	}
 
