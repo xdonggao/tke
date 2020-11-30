@@ -77,6 +77,7 @@ func NewStorage(optsGetter genericregistry.RESTOptionsGetter, platformClient pla
 
 		CreateStrategy: strategy,
 		AfterCreate:    strategy.AfterCreate,
+		AfterUpdate:    strategy.AfterCreate,
 		UpdateStrategy: strategy,
 		DeleteStrategy: strategy,
 		ExportStrategy: strategy,
