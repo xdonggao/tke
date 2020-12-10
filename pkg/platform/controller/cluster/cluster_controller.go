@@ -62,6 +62,7 @@ const (
 
 // Controller is responsible for performing actions dependent upon a cluster phase.
 type Controller struct {
+	serverName   string
 	queue        workqueue.RateLimitingInterface
 	lister       platformv1lister.ClusterLister
 	listerSynced cache.InformerSynced
@@ -73,6 +74,7 @@ type Controller struct {
 
 // NewController creates a new Controller object.
 func NewController(
+	serverName string,
 	platformClient platformversionedclient.PlatformV1Interface,
 	clusterInformer platformv1informer.ClusterInformer,
 	resyncPeriod time.Duration,
@@ -81,6 +83,7 @@ func NewController(
 	rand.Seed(time.Now().Unix())
 
 	c := &Controller{
+		serverName:serverName,
 		queue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "cluster"),
 
 		log:            log.WithName("ClusterController"),
@@ -110,6 +113,9 @@ func NewController(
 
 func (c *Controller) addCluster(obj interface{}) {
 	cluster := obj.(*platformv1.Cluster)
+	if cluster.Labels["eks.tke.cloud.tencent.com/platform"] != c.serverName{
+		return
+	}
 	c.log.Info("Adding cluster", "clusterName", cluster.Name)
 	c.enqueue(cluster)
 }
@@ -117,6 +123,10 @@ func (c *Controller) addCluster(obj interface{}) {
 func (c *Controller) updateCluster(old, obj interface{}) {
 	oldCluster := old.(*platformv1.Cluster)
 	cluster := obj.(*platformv1.Cluster)
+	if cluster.Labels["eks.tke.cloud.tencent.com/platform"] != c.serverName{
+		return
+	}
+
 	if !c.needsUpdate(oldCluster, cluster) {
 		return
 	}

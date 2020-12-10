@@ -58,6 +58,7 @@ func startClusterController(ctx ControllerContext) (http.Handler, bool, error) {
 	}
 
 	ctrl := clustercontroller.NewController(
+		ctx.Config.ServerName,
 		ctx.ClientBuilder.ClientOrDie("cluster-controller").PlatformV1(),
 		ctx.InformerFactory.Platform().V1().Clusters(),
 		ctx.Config.ClusterController.ClusterSyncPeriod,
