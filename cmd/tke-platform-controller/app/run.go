@@ -20,10 +20,9 @@ package app
 
 import (
 	"context"
-	"os"
 	"time"
+	"tkestack.io/tke/pkg/util/net"
 
-	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apiserver/pkg/server/healthz"
 	"tkestack.io/tke/api/platform"
 	"tkestack.io/tke/cmd/tke-platform-controller/app/config"
@@ -88,17 +87,15 @@ func Run(cfg *config.Config, stopCh <-chan struct{}) error {
 		panic("unreachable")
 	}
 
-	id, err := os.Hostname()
-	if err != nil {
-		return err
-	}
+	hostIp := net.GetLocalIP()
 
 	// add a uniquifier so that two processes on the same host don't accidentally both become active
-	id = id + "_" + string(uuid.NewUUID())
+	//id := hostIp + "_" + string(uuid.NewUUID())
+
 	rl := resourcelock.NewPlatform(cfg.ServerName,
 		cfg.LeaderElectionClient.PlatformV1(),
 		resourcelock.Config{
-			Identity: id,
+			Identity: hostIp,
 		})
 
 	leaderelection.RunOrDie(ctx, leaderelection.ElectionConfig{
