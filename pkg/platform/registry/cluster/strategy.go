@@ -111,7 +111,7 @@ func (s *Strategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
 	if err != nil {
 		return // avoid panic validate will be report error
 	}
-	clusterWrapper, err := types.GetCluster(ctx, s.platformClient, cluster)
+	clusterWrapper, err := types.GetClusterWithoutCredentail(ctx, s.platformClient, cluster)
 	if err != nil {
 		panic(err)
 	}
@@ -129,7 +129,7 @@ func (s *Strategy) AfterCreate(obj runtime.Object) error {
 	if err != nil {
 		return err
 	}
-	clusterWrapper, err := types.GetCluster(context.Background(), s.platformClient, cluster)
+	clusterWrapper, err := types.GetClusterWithoutCredentail(context.Background(), s.platformClient, cluster)
 	if err != nil {
 		return err
 	}

@@ -83,6 +83,20 @@ func GetCluster(ctx context.Context, platformClient internalversion.PlatformInte
 	return result, nil
 }
 
+func GetClusterWithoutCredentail(ctx context.Context, platformClient internalversion.PlatformInterface, cluster *platform.Cluster) (*Cluster, error) {
+	result := new(Cluster)
+	result.Cluster = cluster
+	if cluster.Spec.ClusterCredentialRef != nil {
+		clusterCredential, err := platformClient.ClusterCredentials().Get(ctx, cluster.Spec.ClusterCredentialRef.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("get cluster's credential error: %w", err)
+		}
+		result.ClusterCredential = clusterCredential
+	}
+
+	return result, nil
+}
+
 func (c *Cluster) Clientset() (kubernetes.Interface, error) {
 	config, err := c.RESTConfig(&rest.Config{})
 	if err != nil {
