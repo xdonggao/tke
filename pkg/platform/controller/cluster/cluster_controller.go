@@ -264,7 +264,7 @@ func (c *Controller) reconcile(ctx context.Context, key string, cluster *platfor
 	var err error
 
 	c.ensureSyncCredentialClusterName(ctx, cluster)
-	c.ensureSyncClusterMachineNodeLabel(ctx, cluster)
+//	c.ensureSyncClusterMachineNodeLabel(ctx, cluster)
 
 	switch cluster.Status.Phase {
 	case platformv1.ClusterInitializing:
