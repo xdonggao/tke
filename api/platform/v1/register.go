@@ -103,6 +103,9 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&LogCollectorList{},
 		&LogCollectorProxyOptions{},
 
+		&ClusterAuthentication{},
+		&ClusterAuthenticationList{},
+
 		&LBCF{},
 		&LBCFList{},
 		&LBCFProxyOptions{},

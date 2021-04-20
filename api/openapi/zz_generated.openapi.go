@@ -922,6 +922,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"tkestack.io/tke/api/notify/v1.TemplateText":                                  schema_tke_api_notify_v1_TemplateText(ref),
 		"tkestack.io/tke/api/notify/v1.TemplateWechat":                                schema_tke_api_notify_v1_TemplateWechat(ref),
 		"tkestack.io/tke/api/platform/v1.AddonSpec":                                   schema_tke_api_platform_v1_AddonSpec(ref),
+		"tkestack.io/tke/api/platform/v1.AuthenticationInfo":                          schema_tke_api_platform_v1_AuthenticationInfo(ref),
 		"tkestack.io/tke/api/platform/v1.AuthzWebhookAddr":                            schema_tke_api_platform_v1_AuthzWebhookAddr(ref),
 		"tkestack.io/tke/api/platform/v1.BuiltinAuthzWebhookAddr":                     schema_tke_api_platform_v1_BuiltinAuthzWebhookAddr(ref),
 		"tkestack.io/tke/api/platform/v1.CSIOperator":                                 schema_tke_api_platform_v1_CSIOperator(ref),
@@ -939,6 +940,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"tkestack.io/tke/api/platform/v1.ClusterAddonTypeList":                        schema_tke_api_platform_v1_ClusterAddonTypeList(ref),
 		"tkestack.io/tke/api/platform/v1.ClusterAddress":                              schema_tke_api_platform_v1_ClusterAddress(ref),
 		"tkestack.io/tke/api/platform/v1.ClusterApplyOptions":                         schema_tke_api_platform_v1_ClusterApplyOptions(ref),
+		"tkestack.io/tke/api/platform/v1.ClusterAuthentication":                       schema_tke_api_platform_v1_ClusterAuthentication(ref),
+		"tkestack.io/tke/api/platform/v1.ClusterAuthenticationList":                   schema_tke_api_platform_v1_ClusterAuthenticationList(ref),
 		"tkestack.io/tke/api/platform/v1.ClusterComponent":                            schema_tke_api_platform_v1_ClusterComponent(ref),
 		"tkestack.io/tke/api/platform/v1.ClusterComponentReplicas":                    schema_tke_api_platform_v1_ClusterComponentReplicas(ref),
 		"tkestack.io/tke/api/platform/v1.ClusterCondition":                            schema_tke_api_platform_v1_ClusterCondition(ref),
@@ -44227,6 +44230,37 @@ func schema_tke_api_platform_v1_AddonSpec(ref common.ReferenceCallback) common.O
 	}
 }
 
+func schema_tke_api_platform_v1_AuthenticationInfo(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"clientCertificate": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "byte",
+						},
+					},
+					"clientKey": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "byte",
+						},
+					},
+					"commonName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+				Required: []string{"clientCertificate", "clientKey", "commonName"},
+			},
+		},
+	}
+}
+
 func schema_tke_api_platform_v1_AuthzWebhookAddr(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -44898,6 +44932,123 @@ func schema_tke_api_platform_v1_ClusterApplyOptions(ref common.ReferenceCallback
 				},
 			},
 		},
+	}
+}
+
+func schema_tke_api_platform_v1_ClusterAuthentication(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterAuthentication is the resource that record the users tencentcloud accounts.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"tenantID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"clusterName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"ownerUIN": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"subAccountUIN": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"serviceRole": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"authenticationInfo": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("tkestack.io/tke/api/platform/v1.AuthenticationInfo"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "tkestack.io/tke/api/platform/v1.AuthenticationInfo"},
+	}
+}
+
+func schema_tke_api_platform_v1_ClusterAuthenticationList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterAuthenticationList is the whole list of all ClusterAuthentications.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "List of ClusterAuthentications",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("tkestack.io/tke/api/platform/v1.ClusterAuthentication"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "tkestack.io/tke/api/platform/v1.ClusterAuthentication"},
 	}
 }
 

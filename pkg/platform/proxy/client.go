@@ -21,6 +21,8 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
 	"strings"
 	"sync"
 
@@ -56,6 +58,12 @@ func makeClientKey(username string, groups []string) string {
 	return fmt.Sprintf("%s###%v", username, groups)
 }
 
+const (
+	annotationOwnerUIN               = "eks.tke.cloud.tencent.com/owner-uin"
+	annotationCreateUIN              = "eks.tke.cloud.tencent.com/create-uin"
+	annotationRBAC                   = "eks.tke.cloud.tencent.com/rbac"
+)
+
 func ClientSet(ctx context.Context, platformClient platforminternalclient.PlatformInterface) (*kubernetes.Clientset,
 	error) {
 	clusterName := filter.ClusterFrom(ctx)
@@ -83,6 +91,22 @@ func ClientSet(ctx context.Context, platformClient platforminternalclient.Platfo
 	}
 
 	config := &rest.Config{}
+
+	// not use rbac, use admin token
+	if rbac,ok := cluster.Annotations[annotationRBAC]; ok && rbac == "true"{
+		// uin := authentication.GetUID(ctx)
+		uin := filter.UinFrom(ctx)
+		if uin != cluster.Annotations[annotationOwnerUIN] && uin != cluster.Annotations[annotationCreateUIN] {
+			// not owner and creator, use client Cert
+			clientCertData,clientKeyData,err := getOrCreateClientCertV2(ctx, clusterWrapper, platformClient)
+			config, err = clusterWrapper.RESTConfigForClientX509(config, clientCertData, clientKeyData)
+			if err != nil {
+				return nil, err
+			}
+			return kubernetes.NewForConfig(config)
+		}
+	}
+
 	if cluster.AuthzWebhookEnabled() {
 		clientCertData, clientKeyData, err := getOrCreateClientCert(ctx, clusterWrapper.ClusterCredential)
 		if err != nil {
@@ -100,6 +124,57 @@ func ClientSet(ctx context.Context, platformClient platforminternalclient.Platfo
 	}
 
 	return kubernetes.NewForConfig(config)
+}
+
+func getOrCreateClientCertV2(ctx context.Context, clusterWrapper *types.Cluster, platformClient platforminternalclient.PlatformInterface) ([]byte, []byte, error) {
+	groups := authentication.Groups(ctx)
+	// username, tenantID := authentication.UsernameAndTenantID(ctx)
+	// if tenantID != "" {
+	// 	groups = append(groups, fmt.Sprintf("tenant:%s", tenantID))
+	// }
+	uin := filter.UinFrom(ctx)
+
+	clusterName := filter.ClusterFrom(ctx)
+	if clusterName == "" {
+		return nil, nil, errors.NewBadRequest("clusterName is required")
+	}
+
+	clusterAuthentication,err := platformClient.ClusterAuthentications(clusterName).Get(ctx,clusterName+ "-" + uin,metav1.GetOptions{})
+	if err == nil {
+		return clusterAuthentication.AuthenticationInfo.ClientCertificate,clusterAuthentication.AuthenticationInfo.ClientKey ,nil
+	}
+
+	// don't have clusterAuthentication, create and save.
+	credential := clusterWrapper.ClusterCredential
+	clientCertData, clientKeyData, err := pkiutil.GenerateClientCertAndKey(uin, groups, credential.CACert, credential.CAKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	clusterAuth := &platform.ClusterAuthentication{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      clusterName + "-" + uin,
+			Namespace: clusterName,
+		},
+		TenantID:      clusterWrapper.Spec.TenantID,
+		ClusterName:   clusterName,
+		SubAccountUIN: uin,
+		AuthenticationInfo: platform.AuthenticationInfo{
+			ClientCertificate: clientCertData,
+			ClientKey:         clientKeyData,
+			CommonName:        uin + "-" + strconv.FormatInt(time.Now().Unix(), 10),
+		},
+	}
+
+	_, err = platformClient.ClusterAuthentications(clusterName).Create(ctx,clusterAuth,metav1.CreateOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	log.Debugf("generateClientCert success. uin:%s groups:%v\n clientCertData:\n %s clientKeyData:\n %s",
+		uin, groups, clientCertData, clientKeyData)
+
+	return clientCertData, clientKeyData, nil
 }
 
 func getOrCreateClientCert(ctx context.Context, credential *platform.ClusterCredential) ([]byte, []byte, error) {
