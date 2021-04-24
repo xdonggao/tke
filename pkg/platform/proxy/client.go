@@ -21,8 +21,6 @@ package proxy
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
 	"strings"
 	"sync"
 
@@ -162,7 +160,7 @@ func getOrCreateClientCertV2(ctx context.Context, clusterWrapper *types.Cluster,
 		AuthenticationInfo: platform.AuthenticationInfo{
 			ClientCertificate: clientCertData,
 			ClientKey:         clientKeyData,
-			CommonName:        uin + "-" + strconv.FormatInt(time.Now().Unix(), 10),
+			CommonName:        uin,
 		},
 	}
 
