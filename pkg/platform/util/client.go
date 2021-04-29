@@ -492,8 +492,7 @@ func BuildClientSetWithAuth(ctx context.Context, cluster *platform.Cluster, cred
 
 	// not use rbac, use admin token
 	if rbac,ok := cluster.Annotations[annotationRBAC]; ok && rbac == "true"{
-		// uin := authentication.GetUID(ctx)
-		uin := filter.UinFrom(ctx)
+		uin := authentication.GetUID(ctx)
 		if uin != cluster.Annotations[annotationOwnerUIN] && uin != cluster.Annotations[annotationCreateUIN] {
 			clusterWrapper, err := types.GetCluster(ctx, platformClient, cluster)
 			// not owner and creator, use client Cert
@@ -527,11 +526,10 @@ func BuildClientSetWithAuth(ctx context.Context, cluster *platform.Cluster, cred
 
 func getOrCreateClientCertV2(ctx context.Context, clusterWrapper *types.Cluster, platformClient platforminternalclient.PlatformInterface) ([]byte, []byte, error) {
 	groups := authentication.Groups(ctx)
-	// username, tenantID := authentication.UsernameAndTenantID(ctx)
-	// if tenantID != "" {
-	// 	groups = append(groups, fmt.Sprintf("tenant:%s", tenantID))
-	// }
-	uin := filter.UinFrom(ctx)
+	uin, tenantID := authentication.UsernameAndTenantID(ctx)
+	if tenantID != "" {
+		groups = append(groups, fmt.Sprintf("tenant:%s", tenantID))
+	}
 
 	clusterName := filter.ClusterFrom(ctx)
 	if clusterName == "" {
